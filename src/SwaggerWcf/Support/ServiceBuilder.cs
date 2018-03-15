@@ -128,9 +128,20 @@ namespace SwaggerWcf.Support
                     if (da == null || hiddenTags.Any(ht => ht == ti.AsType().Name))
                         continue;
 
-                    Mapper mapper = new Mapper(hiddenTags, visibleTags);
+                    if (service.Info is null)
+                    {
+                        service.Info = ti.GetServiceInfo();
+                    }
 
-                    IEnumerable<Path> paths = mapper.FindMethods(da.ServicePath, ti.AsType(), definitionsTypesList);
+                    Mapper mapper = new Mapper(hiddenTags, visibleTags);
+                  
+                    if (string.IsNullOrWhiteSpace(service.BasePath))
+                        service.BasePath = da.ServicePath;
+
+                    if (service.BasePath.EndsWith("/"))
+                        service.BasePath = service.BasePath.Substring(0, service.BasePath.Length - 1);
+
+                    IEnumerable<Path> paths = mapper.FindMethods(ti.AsType(), definitionsTypesList);
                     service.Paths.AddRange(paths);
                 }
             }
@@ -147,7 +158,13 @@ namespace SwaggerWcf.Support
 
             Mapper mapper = new Mapper(hiddenTags, visibleTags);
 
-            IEnumerable<Path> paths = mapper.FindMethods(da.ServicePath, type, definitionsTypesList);
+            if (string.IsNullOrWhiteSpace(service.BasePath))
+                service.BasePath = da.ServicePath;
+
+            if (service.BasePath.EndsWith("/"))
+                service.BasePath = service.BasePath.Substring(0, service.BasePath.Length - 1);
+
+            IEnumerable<Path> paths = mapper.FindMethods(type, definitionsTypesList);
             service.Paths.AddRange(paths);
         }
     }
